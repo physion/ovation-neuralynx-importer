@@ -25,8 +25,9 @@ class BinaryReader:
         self.file = file
         self.endian = endian
 
-    def read_string(self, bytes):
-        return self.file.read(bytes)
+    def read_string(self, bytes, encoding='utf-8'):
+        s = self.file.read(bytes)
+        return s.decode(encoding)
 
     def read(self, type_name):
         return self.read_array(type_name, 1)[0]

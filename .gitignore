@@ -2,3 +2,5 @@
 build
 *.class
 *.pyc
+dist
+.DS_Store
