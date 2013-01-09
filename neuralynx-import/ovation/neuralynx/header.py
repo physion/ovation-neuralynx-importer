@@ -3,6 +3,16 @@ import re
 from datetime import datetime,timedelta
 
 def parse_header(reader):
+    """Parses a Neuralynx data file header.
+
+    Parameters:
+    reader -- BinaryReader
+
+    Returns:
+    dict of header metadata
+
+    """
+
     # Neuralynx appears to use iso-8859-1 encoding, not ASCII
     header = reader.read_string(16 * 1024, encoding='iso-8859-1')
     result = dict()

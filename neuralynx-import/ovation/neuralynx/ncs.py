@@ -1,6 +1,6 @@
 __author__ = 'barry'
 
-import binary
+import binary_reader
 from datetime import timedelta
 
 class CscBlock(object):
@@ -32,6 +32,6 @@ def ncs_blocks(reader, header):
             samples = [s * header[u'ADBitVolts'] * 1e6 for s in reader.read_array('int16', num_samples)]
 
             yield CscBlock(start, channel_number, sample_freq_hz, samples)
-    except binary.BinaryReaderEOFException:
+    except binary_reader.BinaryReaderEOFException:
         return
 

@@ -6,6 +6,8 @@ class BinaryReaderEOFException(Exception):
     def __str__(self):
         return 'Not enough bytes in file to satisfy read request'
 
+NEURALYNX_ENDIAN = '<'
+
 class BinaryReader:
     # Map well-known type names into struct format characters.
     TYPE_NAMES = {

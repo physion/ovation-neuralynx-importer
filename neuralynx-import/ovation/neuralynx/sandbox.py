@@ -1,7 +1,6 @@
 from __future__ import with_statement
 import sys
-import binary
-from datetime import datetime,timedelta
+import binary_reader
 from header import parse_header
 from pprint import pprint
 from ncs import ncs_blocks
@@ -14,7 +13,7 @@ def print_header(reader):
 
 def list_ncs(path):
     with open(path,'rb') as f:
-        reader = binary.BinaryReader(f, '<')
+        reader = binary_reader.BinaryReader(f, '<')
         header = print_header(reader)
         print ' '
         print ' '
@@ -31,7 +30,7 @@ def list_ncs(path):
 
 def list_nev(path):
     with open(path, 'rb') as f:
-        reader = binary.BinaryReader(f, '<')
+        reader = binary_reader.BinaryReader(f, '<')
         header = print_header(reader)
         print ' '
         print ' '

@@ -1,6 +1,6 @@
 __author__ = 'barry'
 
-import binary
+import binary_reader
 from datetime import timedelta
 
 class Event(object):
@@ -45,5 +45,5 @@ def nev_events(reader, header):
 
             yield Event(event_time, packet_id, event_id, ttl_value, crc, extra, event_string)
 
-    except binary.BinaryReaderEOFException:
+    except binary_reader.BinaryReaderEOFException:
         return
