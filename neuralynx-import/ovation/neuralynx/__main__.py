@@ -4,11 +4,11 @@ import sys
 import platform
 try:
     import readline
-except:
+except ImportError:
     pass
 
 from optparse import OptionParser
-from importer import NeuralynxImporter
+from ovation.neuralynx.importer import NeuralynxImporter
 from getpass import getpass
 
 _OVATION_CLASSPATH = {
@@ -24,7 +24,7 @@ def main(argv=None):
 
 
     usage = "usage: %prog [options] <container_uri> <source_uri> <ncs_file1> <ncs_file2> ..."
-    version = "%prog 1.0"
+    version = "%prog BETA"
     description = "Neuralynx NEV/NCS importer for Ovation"
 
     parser = OptionParser(usage=usage,

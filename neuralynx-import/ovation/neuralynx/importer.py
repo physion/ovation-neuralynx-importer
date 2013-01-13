@@ -6,8 +6,8 @@ import logging
 from getpass import getpass
 from org.joda.time import DateTime, DateTimeZone
 
-from exceptions import ImportException
-from header import parse_header
+from ovation.neuralynx.exceptions import ImportException
+from ovation.neuralynx.header import parse_header
 from binary_reader import BinaryReader, NEURALYNX_ENDIAN
 
 class NeuralynxImporter(object):
