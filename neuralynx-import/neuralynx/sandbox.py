@@ -5,7 +5,7 @@ import logging
 from header import parse_header
 from pprint import pprint
 from ncs import ncs_blocks, CscData
-from nev import nev_events
+from nev import nev_events, EpochBoundaries
 
 def print_header(reader):
     header = parse_header(reader)
@@ -23,7 +23,8 @@ def collect_ncs_samples(path):
 
 def list_ncs(path):
     with open(path,'rb') as f:
-
+        reader = binary_reader.BinaryReader(f, binary_reader.NEURALYNX_ENDIAN)
+        header = print_header(reader)
         print ' '
         print ' '
         print "NCS blocks:"
@@ -56,6 +57,22 @@ def list_nev(path):
                 print " "
         print "Done."
 
+def list_boundaries(path):
+    with open(path, 'rb') as f:
+        reader = binary_reader.BinaryReader(f, '<')
+        header = print_header(reader)
+        print ' '
+        print ' '
+        eb = EpochBoundaries(header,
+            nev_events(reader, header),
+            11,
+            1,
+            False
+            )
+
+        for b in eb.boundaries:
+            print "[",b.start, "  -  ", b.end, "]"
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
@@ -65,7 +82,7 @@ if __name__ == '__main__':
             #list_ncs(path)
             collect_ncs_samples(path)
         elif path.endswith('nev'):
-            list_nev(path)
-
+            #list_nev(path)
+            list_boundaries(path)
         print " "
         print " "

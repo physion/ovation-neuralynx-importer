@@ -17,10 +17,19 @@ class EpochBoundaries(object):
         self.start_event_id = start_event_id
         self.end_event_id = end_event_id
         self.include_interepoch = include_interepoch
+        self._loaded = False
+
+    def _load(self):
+        if not self._loaded:
+            self.events_list = list(self._events)
+            self._loaded = True
 
     @property
     def boundaries(self):
-        events = list(self._events())
+        if not self._loaded:
+            self._load()
+
+        events = self.events_list
         start_events = [e.event_time for e in events if e.event_id == self.start_event_id]
         end_events = None if self.end_event_id is None else [e.event_time for e in events if e.event_id == self.end_event_id]
 
@@ -30,14 +39,30 @@ class EpochBoundaries(object):
             end_events.sort()
 
         for (i,s) in enumerate(start_events[:-1]):
-            end = end_events[i] if (has_end_events and
-                                    len(end_events) > i and
-                                     end_events[i] < start_events[i+1])\
-                    else start_events[i+1]
+            if has_end_events:
+                ends = [e for e in end_events if e > s]
+                end = min(ends) if len(ends) > 0 else start_events[i+1]
+            else:
+                end = start_events[i+1]
+
             yield Boundary(s,
-                 end,
+                end,
                 False)
-        yield Boundary(start_events[-1], None, False)
+
+            if self.include_interepoch and end < start_events[i+1]:
+                yield Boundary(end,
+                    start_events[i+1],
+                    True)
+
+        if has_end_events:
+            ends = [e for e in end_events if e > start_events[-1]]
+            end = min(ends) if len(ends) > 0 else None
+        else:
+            end = None
+
+        yield Boundary(start_events[-1],
+            end,
+            False)
 
 
 

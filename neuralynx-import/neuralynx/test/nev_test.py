@@ -26,7 +26,8 @@ class EpochBoundaries_spec(object):
                 yield Event(start + timedelta(microseconds=(i * 103 + 95)),
                     0, end_id, 0, 0, 0, "")
 
-        eb = EpochBoundaries(header, events, start_id, end_id, False)
+        eb = EpochBoundaries(header, events(), start_id, end_id, False)
+
 
         eq_(len(list(eb.boundaries)), 3)
 
@@ -51,7 +52,7 @@ class EpochBoundaries_spec(object):
                 yield Event(start + timedelta(microseconds=(i * 103)),
                     0, start_id, 0, 0, 0, "")
 
-        eb = EpochBoundaries(header, events, start_id, end_id, False)
+        eb = EpochBoundaries(header, events(), start_id, end_id, False)
 
         boundaries = list(eb.boundaries)
 
@@ -76,7 +77,7 @@ class EpochBoundaries_spec(object):
                 yield Event(start + timedelta(microseconds=(i * 103 + 95)),
                     0, end_id, 0, 0, 0, "")
 
-        eb = EpochBoundaries(header, events, start_id, end_id, False)
+        eb = EpochBoundaries(header, events(), start_id, end_id, False)
 
         for b in eb.boundaries:
             eq_(b.end, b.start + timedelta(microseconds=95))
@@ -96,10 +97,46 @@ class EpochBoundaries_spec(object):
                     0, start_id, 0, 0, 0, "")
                 yield Event(start + timedelta(microseconds=(i * 103 + 95)),
                     0, end_id, 0, 0, 0, "")
+            yield Event(start + timedelta(microseconds=(4 * 103)),
+                0, start_id, 0, 0, 0, "")
 
-        eb = EpochBoundaries(header, events, start_id, end_id, False)
+        eb = EpochBoundaries(header, events(), start_id, end_id, False)
 
-        for b in list(eb.boundaries)[:-1]:
+        boundaries = list(eb.boundaries)
+        for b in boundaries[:-1]:
             eq_(b.end, b.start + timedelta(microseconds=95))
 
-        assert list(eb.boundaries)[-1].end is None
+        assert boundaries[-1].end is None
+
+    @istest
+    def should_include_interepochs(self):
+        header = {
+            u'Time Opened' : datetime.now()
+        }
+
+        start_id = 1
+        end_id = 2
+        start = header[u'Time Opened']
+        def events():
+            for i in xrange(3):
+                yield Event(start + timedelta(microseconds=(i * 103)),
+                    0, start_id, 0, 0, 0, "")
+                yield Event(start + timedelta(microseconds=(i * 103 + 95)),
+                    0, end_id, 0, 0, 0, "")
+            yield Event(start + timedelta(microseconds=(4 * 103)),
+                0, start_id, 0, 0, 0, "")
+
+        eb = EpochBoundaries(header, events(), start_id, end_id, True)
+
+        boundaries = list(eb.boundaries)
+
+        eq_(len(boundaries), 7)
+        eq_(len([b for b in boundaries if b.interepoch == True]), 3)
+        eq_(len([b for b in boundaries if b.interepoch == False]), 4)
+
+
+        for b in boundaries:
+            assert b.end is None or b.start < b.end
+
+            eq_(sorted(boundaries, key=lambda b: b.start),
+                boundaries)
