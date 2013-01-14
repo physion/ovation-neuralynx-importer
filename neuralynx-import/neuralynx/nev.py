@@ -1,3 +1,6 @@
+# Copyright 2011, Physion Consulting LLC
+# -*- coding: utf-8 -*-
+
 __author__ = 'barry'
 
 import binary_reader
@@ -30,6 +33,7 @@ class EpochBoundaries(object):
             self._load()
 
         events = self.events_list
+
         start_events = [e.event_time for e in events if e.event_id == self.start_event_id]
         end_events = None if self.end_event_id is None else [e.event_time for e in events if e.event_id == self.end_event_id]
 

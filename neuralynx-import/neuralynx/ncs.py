@@ -1,3 +1,4 @@
+# Copyright 2011, Physion Consulting LLC
 # -*- coding: utf-8 -*-
 from __future__ import with_statement
 

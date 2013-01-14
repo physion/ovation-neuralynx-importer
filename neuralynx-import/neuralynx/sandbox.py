@@ -1,3 +1,5 @@
+# Copyright 2011, Physion Consulting LLC
+
 from __future__ import with_statement
 import sys
 import binary_reader
