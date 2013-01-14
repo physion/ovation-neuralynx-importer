@@ -4,7 +4,7 @@
 __author__ = 'barry'
 
 from datetime import datetime, timedelta
-from neuralynx.nev import EpochBoundaries, Event
+from ovneuralynx.nev import EpochBoundaries, Event
 from nose.tools import istest, eq_
 
 @istest

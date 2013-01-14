@@ -8,7 +8,7 @@ import binary_reader
 
 from math import floor, ceil
 from datetime import timedelta
-from neuralynx.exceptions import ImportException
+from ovneuralynx.exceptions import ImportException
 
 
 def total_microseconds(td):

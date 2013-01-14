@@ -5,8 +5,8 @@ import datetime
 import jarray
 from nose.tools import istest, raises
 from math import floor, ceil
-from neuralynx.exceptions import ImportException
-from neuralynx.ncs import calculate_start_index, calculate_end_index, CscBlock, CscData
+from ovneuralynx.exceptions import ImportException
+from ovneuralynx.ncs import calculate_start_index, calculate_end_index, CscBlock, CscData
 
 
 

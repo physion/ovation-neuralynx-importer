@@ -7,6 +7,6 @@ setup(name='Ovation Neuralynx Import',
     description='Neuralynx importer for Physion Ovation',
     author='Physion Consulting',
     author_email='info@physionconsulting.com',
-    packages=['ovation.neuralynx'],
+    packages=['ovneuralynx'],
     package_dir = {'': 'neuralynx-import'}
 )

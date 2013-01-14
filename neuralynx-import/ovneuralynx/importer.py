@@ -10,10 +10,10 @@ import ovation
 from getpass import getpass
 from org.joda.time import DateTime, DateTimeZone
 
-from neuralynx.exceptions import ImportException
-from neuralynx.header import parse_header
-from neuralynx.nev import EpochBoundaries, nev_events
-from neuralynx.ncs import CscData, ncs_blocks
+from ovneuralynx.exceptions import ImportException
+from ovneuralynx.header import parse_header
+from ovneuralynx.nev import EpochBoundaries, nev_events
+from ovneuralynx.ncs import CscData, ncs_blocks
 from binary_reader import BinaryReader, NEURALYNX_ENDIAN
 
 class NeuralynxImporter(object):
@@ -22,7 +22,7 @@ class NeuralynxImporter(object):
                  connection_file=None,
                  username=None,
                  password=None,
-                 protocol_id='neuralynx',
+                 protocol_id='ovneuralynx',
                  protocol_parameters=dict()):
 
         if connection_file is None:
