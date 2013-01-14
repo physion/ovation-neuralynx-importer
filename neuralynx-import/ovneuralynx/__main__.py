@@ -98,12 +98,15 @@ def main(argv=None):
     else:
         protocol_parameters = dict(options.protcol_parameters)
 
+    tz = DateTimeZone.fromID(options.timezone)
+
     importer = NeuralynxImporter(
         connection_file=options.connection_file,
         username=user,
         password=options.password,
         protocol_id=options.protocol_id,
-        protocol_parameters=protocol_parameters)
+        protocol_parameters=protocol_parameters,
+        timezone=tz)
 
 
     importer.import_ncs(container_uri,

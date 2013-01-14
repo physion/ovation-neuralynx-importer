@@ -8,7 +8,7 @@ import os.path
 import ovation
 
 from getpass import getpass
-from org.joda.time import DateTime, DateTimeZone
+from org.joda.time import LocalDateTime, DateTimeZone
 
 from ovneuralynx.exceptions import ImportException
 from ovneuralynx.header import parse_header
@@ -23,7 +23,8 @@ class NeuralynxImporter(object):
                  username=None,
                  password=None,
                  protocol_id='ovneuralynx',
-                 protocol_parameters=dict()):
+                 protocol_parameters=None,
+                 timezone=DateTimeZone.geDefault()):
 
         if connection_file is None:
             raise ImportException("Connection file required")
@@ -36,6 +37,7 @@ class NeuralynxImporter(object):
         self.password = password
         self.protocol_id = protocol_id
         self.protocol_parameters = protocol_parameters
+        self.timezone = timezone
 
 
 
@@ -43,7 +45,7 @@ class NeuralynxImporter(object):
                container_uri,
                source_uri,
                label,
-               ncs_files=[],
+               ncs_files=list(),
                event_file=None,
                start_id=None,
                end_id=None,
@@ -75,10 +77,12 @@ class NeuralynxImporter(object):
             csc_data[header["AcqEntName"]] = CscData(header, ncs_blocks(reader, header))
 
         open_time = min(h["Time Opened"] for h in headers.itervalues())
-        start = DateTime(open_time).withZone(DateTimeZone.getDefault())
+
+        # We assume all times are datetime in given local zone
+        start = LocalDateTime(open_time).toDateTime(self.timezone)
 
         logging.info("Inserting top-level EpochGroup")
-        group = container.insertEpochGroup(source, label, DateTime(start))
+        group = container.insertEpochGroup(source, label, start)
 
         logging.info("Determining Epoch boundaries")
         if event_file is None or start_id is None:
@@ -99,11 +103,12 @@ class NeuralynxImporter(object):
         logging.info("Importing Epoch %s : %s", start, end)
 
         epoch = group.insertEpoch(
-                DateTime(start),
-                DateTime(end),
+                LocalDateTime(start).toDateTime(self.timezone),
+                LocalDateTime(end).toDateTime(self.timezone),
                 self.protocol_id if not interepoch else "%s.inter-epoch" % self.protocol_id,
-                self.protocol_parameters
+                self.protocol_parameters if self.protocol_parameters is not None else {}
             )
+
         for (device_name, csc) in csc_data.iteritems():
             device = group.getExperiment().externalDevice(device_name, 'Neuralynx')
             epoch.insertResponse(device,
