@@ -18,7 +18,7 @@ def main(argv=None):
         argv = sys.argv
 
 
-    usage = "usage: %prog [options] <container_uri> <source_uri> <ncs_file1> <ncs_file2> ..."
+    usage = "usage: %prog [options] container_uri source_uri ncs_file1 [ncs_file2 ...]"
     version = "%prog BETA"
     description = "Neuralynx NEV+NCS importer for Ovation"
 
