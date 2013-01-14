@@ -10,6 +10,18 @@ from datetime import timedelta
 from neuralynx.exceptions import ImportException
 
 
+def total_microseconds(td):
+    """Calculates the total microseconds in the given datetime.timedelta.
+
+    Parameters:
+        td      datetime.timedelta
+
+    Returns:
+        total microseconds
+    """
+
+    return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6)
+
 class CscData(object):
 
     def __init__(self, header, blocks):
@@ -20,10 +32,42 @@ class CscData(object):
         self._samples_array = None
         self._loaded = False
 
+
     def _load(self):
         if not self._loaded:
             self._samples_array = _collect_samples(self.sampling_rate_hz, self.blocks)
             self._loaded = True
+
+    @property
+    def start(self):
+        if not self._loaded:
+            self._load()
+
+        return self.header[u'Time Opened']
+
+    @property
+    def end(self):
+        if not self._loaded:
+            self._load()
+
+        return self.start + timedelta(seconds=len(self._samples_array)/self.sampling_rate_hz)
+
+    def samples_by_date(self, start_date, end_date=None):
+        if start_date < self.start:
+            raise ImportException("Start date before data start")
+
+        if end_date is not None and end_date < start_date:
+            raise ImportException("End date before start date")
+
+        if end_date is not None and end_date > self.end:
+            raise ImportException("End date after data end")
+
+        start_td = start_date - self.start
+
+        end_td = None if end_date is None else end_date - self.start
+
+        return self.samples(total_microseconds(start_td),
+            total_microseconds(end_td))
 
 
     def samples(self, start_us, end_us=None):

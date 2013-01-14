@@ -3,6 +3,45 @@ __author__ = 'barry'
 import binary_reader
 from datetime import timedelta
 
+class Boundary(object):
+    def __init__(self, start, end, interepoch):
+        self.start = start
+        self.end = end
+        self.interepoch = interepoch
+
+
+class EpochBoundaries(object):
+    def __init__(self, header, events, start_event_id, end_event_id, include_interepoch):
+        self.header = header
+        self._events = events
+        self.start_event_id = start_event_id
+        self.end_event_id = end_event_id
+        self.include_interepoch = include_interepoch
+
+    @property
+    def boundaries(self):
+        events = list(self._events())
+        start_events = [e.event_time for e in events if e.event_id == self.start_event_id]
+        end_events = None if self.end_event_id is None else [e.event_time for e in events if e.event_id == self.end_event_id]
+
+        has_end_events = end_events is not None and len(end_events) > 0
+        start_events.sort()
+        if has_end_events:
+            end_events.sort()
+
+        for (i,s) in enumerate(start_events[:-1]):
+            end = end_events[i] if (has_end_events and
+                                    len(end_events) > i and
+                                     end_events[i] < start_events[i+1])\
+                    else start_events[i+1]
+            yield Boundary(s,
+                 end,
+                False)
+        yield Boundary(start_events[-1], None, False)
+
+
+
+
 class Event(object):
     def __init__(self, event_time, packet_id, event_id, ttl_value, crc, extra, event_string):
         self.event_time = event_time
