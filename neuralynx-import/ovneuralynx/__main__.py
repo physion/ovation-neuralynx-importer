@@ -59,7 +59,7 @@ def main(argv=None):
         help="Import inter-epoch data")
 
     parser.add_option_group(event_group)
-    
+
     if len(argv) == 1:
         parser.print_help()
         return -1

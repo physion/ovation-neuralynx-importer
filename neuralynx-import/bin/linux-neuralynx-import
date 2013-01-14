@@ -1,0 +1,14 @@
+#!python
+
+# Copyright 2011, Physion Consulting LLC
+# -*- coding: utf-8 -*-
+
+import sys
+
+if __name__ == '__main__':
+    sys.path.append('/usr/ovation/ovation.jar')
+    sys.path.append('/usr/ovation/lib/ovation-ui.jar')
+
+    import ovneuralynx.__main__ as main
+
+    sys.exit(main.main())
