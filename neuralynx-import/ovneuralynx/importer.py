@@ -121,8 +121,12 @@ class NeuralynxImporter(object):
                 ovation.IResponseData.NUMERIC_DATA_UTI)
 
     def import_epochs(self, group, epoch_boundaries, csc_data):
+        current_epoch = None
         for eb in epoch_boundaries:
-            self.import_epoch(csc_data, group, eb.start, eb.end, eb.interepoch)
+            epoch = self.import_epoch(csc_data, group, eb.start, eb.end, eb.interepoch)
+            if current_epoch is not None:
+                epoch.setPreviousEpoch(current_epoch)
+            current_epoch = epoch
 
 
 
