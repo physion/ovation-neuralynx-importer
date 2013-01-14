@@ -24,7 +24,7 @@ class NeuralynxImporter(object):
                  password=None,
                  protocol_id='ovneuralynx',
                  protocol_parameters=None,
-                 timezone=DateTimeZone.geDefault()):
+                 timezone=DateTimeZone.getDefault()):
 
         if connection_file is None:
             raise ImportException("Connection file required")

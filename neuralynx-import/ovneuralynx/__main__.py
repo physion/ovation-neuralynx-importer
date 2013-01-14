@@ -59,7 +59,10 @@ def main(argv=None):
         help="Import inter-epoch data")
 
     parser.add_option_group(event_group)
-
+    
+    if len(argv) == 1:
+        parser.print_help()
+        return -1
 
     (options, args) = parser.parse_args(argv)
 
@@ -117,6 +120,8 @@ def main(argv=None):
         start_id=options.epoch_start_event_id,
         end_id=options.epoch_end_event_id,
         include_interepoch=options.include_interepoch)
+
+    return 0
 
 
 
