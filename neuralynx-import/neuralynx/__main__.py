@@ -20,7 +20,7 @@ def main(argv=None):
 
     usage = "usage: %prog [options] <container_uri> <source_uri> <ncs_file1> <ncs_file2> ..."
     version = "%prog BETA"
-    description = "Neuralynx NEV/NCS importer for Ovation"
+    description = "Neuralynx NEV+NCS importer for Ovation"
 
     parser = OptionParser(usage=usage,
         version=version,
@@ -38,7 +38,7 @@ def main(argv=None):
         help="Neuralynx event (.nev) file", metavar="FILE")
     parser.add_option("--protocol", dest="protocol_id",
         help="Ovaiton protocol I.D.")
-    parser.add_option("-tz", "--timezone", dest="timezone",
+    parser.add_option("--tz", "--timezone", dest="timezone",
         help="Timezone where data was acquired (defaults to local timezone)",
         default=DateTimeZone.getDefault().getID())
     parser.add_option("--protocol-parameter", dest="protocol_parameters",
@@ -52,10 +52,11 @@ def main(argv=None):
     event_group.add_option("--epoch-start", dest="epoch_start_event_id",
         help="Epoch start event I.D.", type="int")
     event_group.add_option("--epoch-end", dest="epoch_end_event_id",
-        help="Epoch end event I.D.", type="int")
+        help="Epoch end event I.D. (required)", type="int")
     event_group.add_option("--include-interepoch",
         action="store_true",
-        dest="include_interepoch")
+        dest="include_interepoch",
+        help="Import inter-epoch data")
 
     parser.add_option_group(event_group)
 

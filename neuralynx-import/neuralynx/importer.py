@@ -81,7 +81,7 @@ class NeuralynxImporter(object):
         group = container.insertEpochGroup(source, label, DateTime(start))
 
         logging.info("Determining Epoch boundaries")
-        if start_id is None:
+        if event_file is None or start_id is None:
             self.import_epoch(group, csc_data, start, None, False)
         else:
             with open(event_file, 'rb') as efile:
@@ -96,12 +96,14 @@ class NeuralynxImporter(object):
             self.import_epochs(group, epoch_boundaries, csc_data)
 
     def import_epoch(self, group, csc_data, start, end, interepoch):
+        logging.info("Importing Epoch %s : %s", start, end)
+
         epoch = group.insertEpoch(
-            DateTime(start),
-            DateTime(end),
-            self.protocol_id if not interepoch else "%s.inter-epoch" % self.protocol_id,
-            self.protocol_parameters
-        )
+                DateTime(start),
+                DateTime(end),
+                self.protocol_id if not interepoch else "%s.inter-epoch" % self.protocol_id,
+                self.protocol_parameters
+            )
         for (device_name, csc) in csc_data.iteritems():
             device = group.getExperiment().externalDevice(device_name, 'Neuralynx')
             epoch.insertResponse(device,
@@ -115,7 +117,6 @@ class NeuralynxImporter(object):
 
     def import_epochs(self, group, epoch_boundaries, csc_data):
         for eb in epoch_boundaries:
-            logging.info("Importing Epoch %s : %s", eb.start, eb.end)
             self.import_epoch(csc_data, group, eb.start, eb.end, eb.interepoch)
 
 
