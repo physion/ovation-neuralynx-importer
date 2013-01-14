@@ -35,6 +35,8 @@ def main(argv=None):
         help="Epoch group label (required)", default="Neuralynx")
     parser.add_option("-e", "--event-file", dest="event_file",
         help="Neuralynx event (.nev) file", metavar="FILE")
+    parser.add_option("--protocol", dest="protocol_id",
+        help="Ovaiton protocol I.D.")
 
     event_group = OptionGroup(parser, "Epoch boundaries",
         description="Epoch boundaries may be defined by events. If either start or end boundary events are defined, an event file (.nev) must be provided")
@@ -64,6 +66,9 @@ def main(argv=None):
     if options.epoch_group_label is None:
         parser.error("EpochGroup label is required")
 
+    if options.protocol_id is None:
+        parser.error("Protocol I.D. is required")
+
     container_uri = args[0]
     source_uri = args[1]
     ncs_files = args[2:]
@@ -77,7 +82,8 @@ def main(argv=None):
     importer = NeuralynxImporter(
         connection_file=options.connection_file,
         username=user,
-        password=options.password)
+        password=options.password,
+        protocol_id=options.protocol_id)
 
 
     importer.import_ncs(container_uri,

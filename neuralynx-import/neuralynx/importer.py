@@ -1,4 +1,5 @@
 # Copyright 2011, Physion Consulting LLC
+from __future__ import with_statement
 
 import logging
 import os.path
@@ -9,6 +10,8 @@ from org.joda.time import DateTime, DateTimeZone
 
 from neuralynx.exceptions import ImportException
 from neuralynx.header import parse_header
+from neuralynx.nev import EpochBoundaries, nev_events
+from neuralynx.ncs import CscData, ncs_blocks
 from binary_reader import BinaryReader, NEURALYNX_ENDIAN
 
 class NeuralynxImporter(object):
@@ -16,7 +19,8 @@ class NeuralynxImporter(object):
     def __init__(self,
                  connection_file=None,
                  username=None,
-                 password=None):
+                 password=None,
+                 protocol_id='neuralynx'):
 
         if connection_file is None:
             raise ImportException("Connection file required")
@@ -27,6 +31,7 @@ class NeuralynxImporter(object):
         self.connection_file = connection_file
         self.username = username
         self.password = password
+        self.protocol_id = protocol_id
 
 
 
@@ -35,11 +40,16 @@ class NeuralynxImporter(object):
                source_uri,
                label,
                ncs_files=[],
-               event_file=None):
+               event_file=None,
+               start_id=None,
+               end_id=None,
+               include_interepoch=True):
 
 
         if self.password is None:
             password = getpass()
+        else:
+            password = self.password
 
         logging.info("Connecting to database at " + self.connection_file)
         ctx = ovation.DataStoreCoordinator.coordinatorWithConnectionFile(os.path.expanduser(self.connection_file)).getContext()
@@ -52,13 +62,13 @@ class NeuralynxImporter(object):
         source = source_uri
 
         logging.info("Reading .ncs headers")
-        headers = dict()
-        ncs_readers = dict()
+        csc_data = {}
+        headers = {}
         for f in ncs_files:
             reader = BinaryReader(file, NEURALYNX_ENDIAN)
             header = parse_header(reader)
             headers[f] = header
-            ncs_readers[header["AcqEntName"]] = reader
+            csc_data[header["AcqEntName"]] = CscData(header, ncs_blocks(reader, header))
 
         open_time = min(h["Time Opened"] for h in headers.itervalues())
         start = DateTime(open_time).withZone(DateTimeZone.getDefault())
@@ -67,28 +77,38 @@ class NeuralynxImporter(object):
         group = container.insertEpochGroup(source, label, DateTime(start))
 
         logging.info("Determining Epoch boundaries")
-        epoch_boundaries = self._epoch_boundaries(event_file)
+        with open(event_file, 'rb') as efile:
+            reader = BinaryReader(efile, NEURALYNX_ENDIAN)
+            header = parse_header(reader)
+            epoch_boundaries = EpochBoundaries(header,
+                nev_events(reader, header),
+                start_id, #TODO
+                end_id, #TODO
+                True) #TODO
 
-        self.import_epochs(group, epoch_boundaries, ncs_readers)
+        self.import_epochs(group, epoch_boundaries, csc_data)
 
-    def import_epochs(self, group, epoch_boundaries, ncs_readers):
-        for (start,end) in epoch_boundaries:
-            logging.info("Importing Epoch %f-%f ms" % (start,end))
+    def import_epochs(self, group, epoch_boundaries, csc_data):
+        for eb in epoch_boundaries:
+            logging.info("Importing Epoch %s : %s", eb.start, eb.end)
+            epoch = group.insertEpoch(
+                eb.start,
+                eb.end,
+                self.protocol_id if not eb.interepoch else "%s.inter-epoch" % self.protocol_id,
+                dict() # TODO parameters
+            )
 
-    def _epoch_boundaries(self, event_path):
-        """Returns a sequnce of ordered tuple Epoch boundaries (start,end).
+            for (device_name, csc) in csc_data.iteritems():
+                device = group.getExperiment().externalDevice(device_name, 'Neuralynx')
+                epoch.insertResponse(device,
+                    csc.header,
+                    ovation.NumericData(csc.samples_by_date(eb.start, eb.end)),
+                    u'µV',
+                    'time',
+                    csc.sampling_rate_hz,
+                    'Hz',
+                    ovation.IResponseData.NUMERIC_DATA_UTI)
 
-        Times in microseconds.
-
-        end = [] indicates the Epoch end is the next Epoch start boundary
-
-        Parameters
-            event_path -- .nev file path
-
-        """
-
-        if event_path is None:
-            return ((0,[]),)
 
 
 
