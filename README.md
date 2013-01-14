@@ -15,7 +15,9 @@ After installing Jython, run `setup.py`:
 
 ## Usage
 
-After installation, you can run the importer via `osx-neuralynx-import` on OS X, `linux-neuralynx-import` on Linux or `windows-neuralynx-import` on Windows. In all cases, the usage is the same:
+After installation, you can run the importer via `osx-neuralynx-import` on OS X, `linux-neuralynx-import` on Linux or `windows-neuralynx-import` on Windows. These scripts are installed in the Jython `bin` directory. If this directory is not on the executable search path, you will need to provide the full path to the scripts to run them at the terminal command line.
+
+In all cases, the usage is the same:
 	
 	Usage: [osx|linux|windows]-neuralynx-import [options] container_uri source_uri ncs_file1 [ncs_file2 ...]
 
