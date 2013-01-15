@@ -14,7 +14,7 @@ from ovneuralynx.exceptions import ImportException
 from ovneuralynx.header import parse_header
 from ovneuralynx.nev import EpochBoundaries, nev_events
 from ovneuralynx.ncs import CscData, ncs_blocks
-from binary_reader import BinaryReader, NEURALYNX_ENDIAN
+from binary_reader import ManagedBinaryReader, BinaryReader, NEURALYNX_ENDIAN
 
 class NeuralynxImporter(object):
 
@@ -61,7 +61,8 @@ class NeuralynxImporter(object):
         ctx = ovation.DataStoreCoordinator.coordinatorWithConnectionFile(os.path.expanduser(self.connection_file)).getContext()
 
         logging.info("Authenticating")
-        self.dsc = ctx.authenticateUser(self.username, password).getAuthenticatedDataStoreCoordinator()
+        ctx.authenticateUser(self.username, password)
+        self.dsc = ctx.getAuthenticatedDataStoreCoordinator()
 
         ctx = self.dsc.getContext()
         container = ctx.objectWithURI(container_uri)
@@ -70,26 +71,29 @@ class NeuralynxImporter(object):
         logging.info("Reading .ncs headers")
         csc_data = {}
         headers = {}
+        readers = []
         for f in ncs_files:
-            reader = BinaryReader(file, NEURALYNX_ENDIAN)
+            reader = ManagedBinaryReader(f, NEURALYNX_ENDIAN)
+            readers.append(reader)
             header = parse_header(reader)
             headers[f] = header
             csc_data[header["AcqEntName"]] = CscData(header, ncs_blocks(reader, header))
 
-        open_time = min(h["Time Opened"] for h in headers.itervalues())
+        try:
+            open_time = min(h["Time Opened"] for h in headers.itervalues())
 
-        # We assume all times are datetime in given local zone
-        start = LocalDateTime(open_time).toDateTime(self.timezone)
+            # We assume all times are datetime in given local zone
+            start = LocalDateTime(open_time).toDateTime(self.timezone)
 
-        logging.info("Inserting top-level EpochGroup")
-        group = container.insertEpochGroup(source, label, start)
+            logging.info("Inserting top-level EpochGroup")
+            group = container.insertEpochGroup(source, label, start)
 
-        logging.info("Determining Epoch boundaries")
-        if event_file is None or start_id is None:
-            self.import_epoch(group, csc_data, start, None, False)
-        else:
-            with open(event_file, 'rb') as efile:
-                reader = BinaryReader(efile, NEURALYNX_ENDIAN)
+            logging.info("Determining Epoch boundaries")
+            if event_file is None or start_id is None:
+                self.import_epoch(group, csc_data, open_time, None, False)
+            else:
+                reader = ManagedBinaryReader(event_file, NEURALYNX_ENDIAN)
+                readers.append(reader)
                 header = parse_header(reader)
                 epoch_boundaries = EpochBoundaries(header,
                     nev_events(reader, header),
@@ -97,7 +101,10 @@ class NeuralynxImporter(object):
                     end_id,
                     include_interepoch)
 
-            self.import_epochs(group, epoch_boundaries, csc_data)
+                self.import_epochs(group, epoch_boundaries.boundaries, csc_data)
+        finally:
+            for r in readers:
+                r.close()
 
     def import_epoch(self, group, csc_data, start, end, interepoch):
         logging.info("Importing Epoch %s : %s", start, end)
@@ -111,19 +118,23 @@ class NeuralynxImporter(object):
 
         for (device_name, csc) in csc_data.iteritems():
             device = group.getExperiment().externalDevice(device_name, 'Neuralynx')
-            epoch.insertResponse(device,
-                csc.header,
-                ovation.NumericData(csc.samples_by_date(start, end)),
-                u'µV',
-                'time',
-                csc.sampling_rate_hz,
-                'Hz',
-                ovation.IResponseData.NUMERIC_DATA_UTI)
+            logging.info("  Inserting response: %s", device.getName())
+            samples = csc.samples_by_date(start, end)
+            if len(samples) > 0:
+                numeric_data = ovation.NumericData(samples)
+                epoch.insertResponse(device,
+                    csc.header,
+                    numeric_data,
+                    u'µV',
+                    'time',
+                    csc.sampling_rate_hz,
+                    'Hz',
+                    ovation.IResponseData.NUMERIC_DATA_UTI)
 
     def import_epochs(self, group, epoch_boundaries, csc_data):
         current_epoch = None
         for eb in epoch_boundaries:
-            epoch = self.import_epoch(csc_data, group, eb.start, eb.end, eb.interepoch)
+            epoch = self.import_epoch(group, csc_data, eb.start, eb.end, eb.interepoch)
             if current_epoch is not None:
                 epoch.setPreviousEpoch(current_epoch)
             current_epoch = epoch

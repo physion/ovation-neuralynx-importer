@@ -41,9 +41,6 @@ class CscData(object):
 
     @property
     def start(self):
-        if not self._loaded:
-            self._load()
-
         return self.header[u'Time Opened']
 
     @property
@@ -54,21 +51,23 @@ class CscData(object):
         return self.start + timedelta(seconds=len(self._samples_array)/self.sampling_rate_hz)
 
     def samples_by_date(self, start_date, end_date=None):
-        if start_date < self.start:
+        dt = timedelta(seconds=1./self.sampling_rate_hz)
+        if start_date < self.start and start_date - self.start > dt:
             raise ImportException("Start date before data start")
 
         if end_date is not None and end_date < start_date:
             raise ImportException("End date before start date")
 
         if end_date is not None and end_date > self.end:
-            raise ImportException("End date after data end")
+            logging.warning("End date after data end")
+            end_date = self.end
 
         start_td = start_date - self.start
 
         end_td = None if end_date is None else end_date - self.start
 
         return self.samples(total_microseconds(start_td),
-            total_microseconds(end_td))
+            total_microseconds(end_td) if end_td is not None else None)
 
 
     def samples(self, start_us, end_us=None):

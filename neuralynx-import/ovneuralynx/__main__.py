@@ -74,7 +74,7 @@ def main(argv=None):
         logging.basicConfig(level=logging.INFO)
 
     # Check command invariants
-    if len(args) < 3:
+    if len(args) < 4:
         parser.error("incorrect number of arguments")
 
     if options.connection_file is None:
@@ -87,21 +87,21 @@ def main(argv=None):
         parser.error("Protocol I.D. is required")
 
 
-    container_uri = args[0]
-    source_uri = args[1]
-    ncs_files = args[2:]
+    container_uri = args[1]
+    source_uri = args[2]
+    ncs_files = args[3:]
 
     if options.user is not None:
         user = options.user
     else:
         user = raw_input(prompt="Username: ")
 
-    if options.protcol_parameters is None:
+    if options.protocol_parameters is None:
         protocol_parameters = {}
     else:
-        protocol_parameters = dict(options.protcol_parameters)
+        protocol_parameters = dict(options.protocol_parameters)
 
-    tz = DateTimeZone.fromID(options.timezone)
+    tz = DateTimeZone.forID(options.timezone)
 
     importer = NeuralynxImporter(
         connection_file=options.connection_file,

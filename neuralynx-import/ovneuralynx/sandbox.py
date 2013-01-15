@@ -84,7 +84,7 @@ if __name__ == '__main__':
             #list_ncs(path)
             collect_ncs_samples(path)
         elif path.endswith('nev'):
-            #list_nev(path)
-            list_boundaries(path)
+            list_nev(path)
+            #list_boundaries(path)
         print " "
         print " "

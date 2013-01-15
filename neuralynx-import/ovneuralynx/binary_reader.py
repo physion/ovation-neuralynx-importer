@@ -8,7 +8,7 @@ class BinaryReaderEOFException(Exception):
 
 NEURALYNX_ENDIAN = '<'
 
-class BinaryReader:
+class BinaryReader(object):
     # Map well-known type names into struct format characters.
     TYPE_NAMES = {
         'int8'   :'b',
@@ -48,3 +48,15 @@ class BinaryReader:
             raise BinaryReaderEOFException
         return struct.unpack(type_format, value)
 
+
+class ManagedBinaryReader(BinaryReader):
+
+    def __init__(self, path, endian):
+        self.file_object = open(path, 'rb')
+        super(ManagedBinaryReader, self).__init__(self.file_object, endian)
+
+    def close(self):
+        self.file_object.close()
+
+    def __del__(self):
+        self.close()
