@@ -4,7 +4,7 @@ This project provides a command-line importer for [Neuralynx](http://neuralynx.c
 
 
 ## Requirements
-The Neuralynx importer requres Ovation 1.4 or greater, a 64-bit Java Virtual Machine ([download](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) and Jython 2.5.1 ([download](http://www.jython.org/downloads.html)) or greater.
+The Neuralynx importer requres Ovation 1.4 or greater, a 64-bit Java Virtual Machine ([download](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) and Jython 2.5.2 ([download](http://www.jython.org/downloads.html)) or greater.
 
 
 ## Installation
@@ -53,3 +53,10 @@ In all cases, the usage is the same:
 	                        Epoch end event I.D. (required)
 	    --include-interepoch
 	                        Import inter-epoch data
+
+### Java heap memory
+The Neuralynx importer must read each NCS file (individually) into memory. If you receve an `OutOfMemoryError` during import, you can increase the amount of memory available to the JVM by calling the import script via jython::
+
+	$ jython -J-XmxMEMm [osx|linux|windows]-neuralynx-importer ...
+	
+where `MEM` is 2048 or higher, the number of megabytes to dedicate to the JVM heap space. 
