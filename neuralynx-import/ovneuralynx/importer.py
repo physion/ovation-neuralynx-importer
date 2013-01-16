@@ -140,7 +140,7 @@ class NeuralynxImporter(object):
         device = epoch.getEpochGroup().getExperiment().externalDevice(device_name, 'Neuralynx')
         samples = csc_data.samples_by_date(start, end)
         if len(samples) > 0:
-            logging.info("  Inserting response for Epoch %s: %s", epoch.getStartTime().toString(), device.getName())
+            logging.info("  Inserting response %s for Epoch %s", device.getName(), epoch.getStartTime().toString())
             numeric_data = ovation.NumericData(samples)
             epoch.insertResponse(device,
                 csc_data.header,
