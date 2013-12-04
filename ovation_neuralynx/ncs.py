@@ -52,7 +52,7 @@ class CscData(object):
 
     def samples_by_date(self, start_date, end_date=None):
         dt = timedelta(seconds=1./self.sampling_rate_hz)
-        if start_date < self.start and start_date - self.start > dt:
+        if start_date < self.start and self.start - start_date > dt:
             raise ImportException("Start date before data start")
 
         if end_date is not None and end_date < start_date:
