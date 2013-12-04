@@ -13,6 +13,7 @@ LocalDateTime = autoclass("org.joda.time.LocalDateTime")
 from getpass import getpass
 from ovation import DateTimeZone
 from ovation.connection import connect
+from ovation import Maps
 
 from ovation_neuralynx.exceptions import ImportException
 from ovation_neuralynx.header import parse_header
@@ -137,12 +138,13 @@ class NeuralynxImporter(object):
 
     def append_response(self, epoch, device_name, csc_data, start, end):
 
-        # TODO externalDevice doesn't exist in ovation-api
-        # get equipment setup and extract device from there?
-        device = epoch.getParent().getExperiment().externalDevice(device_name, 'Neuralynx')
+        devices = Maps.newHashMap()
+        devices.put(device_name, 'Neuralynx')
+        epoch.getParent().getExperiment().setEquipmentSetupFromMap(devices)
+
         samples = csc_data.samples_by_date(start, end)
         if len(samples) > 0:
-            logging.info("  Inserting response %s for Epoch %s", device.getName(), epoch.getStartTime().toString())
+            logging.info("  Inserting response %s for Epoch %s", device_name, epoch.getStartTime().toString())
             numeric_data = ovation.NumericData(samples) # class provided by us/physion/ovation/values/NumericData how do I get it?
             # TODO insertResponse doesn't exist in ovation-api
             # insertNumericMeasurement(String name, Set<String> sourceNames, Set<String> devices, NumericData data)
