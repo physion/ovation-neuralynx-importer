@@ -7,14 +7,18 @@ import logging
 import os.path
 import ovation
 
-from getpass import getpass
-from org.joda.time import LocalDateTime, DateTimeZone
+from jnius import autoclass
+LocalDateTime = autoclass("org.joda.time.LocalDateTime")
 
-from ovneuralynx.exceptions import ImportException
-from ovneuralynx.header import parse_header
-from ovneuralynx.nev import EpochBoundaries, nev_events
-from ovneuralynx.ncs import CscData, ncs_blocks
-from binary_reader import ManagedBinaryReader, BinaryReader, NEURALYNX_ENDIAN
+from getpass import getpass
+from ovation import DateTimeZone
+from ovation.connection import connect
+
+from ovation_neuralynx.exceptions import ImportException
+from ovation_neuralynx.header import parse_header
+from ovation_neuralynx.nev import EpochBoundaries, nev_events
+from ovation_neuralynx.ncs import CscData, ncs_blocks
+from ovation_neuralynx.binary_reader import ManagedBinaryReader, BinaryReader, NEURALYNX_ENDIAN
 
 class NeuralynxImporter(object):
 
@@ -57,16 +61,12 @@ class NeuralynxImporter(object):
         else:
             password = self.password
 
-        logging.info("Connecting to database at " + self.connection_file)
-        ctx = ovation.DataStoreCoordinator.coordinatorWithConnectionFile(os.path.expanduser(self.connection_file)).getContext()
-
         logging.info("Authenticating")
-        ctx.authenticateUser(self.username, password)
-        self.dsc = ctx.getAuthenticatedDataStoreCoordinator()
+        self.dsc = ovation.connect(self.username, self.pasword)
 
         ctx = self.dsc.getContext()
-        container = ctx.objectWithURI(container_uri)
-        source = ctx.objectWithURI(source_uri)
+        container = ctx.getObjectWithURI(container_uri)
+        source = ctx.getObjectWithURI(source_uri)
 
         epochs = {}
         epoch_boundaries = None
@@ -137,11 +137,15 @@ class NeuralynxImporter(object):
 
     def append_response(self, epoch, device_name, csc_data, start, end):
 
-        device = epoch.getEpochGroup().getExperiment().externalDevice(device_name, 'Neuralynx')
+        # TODO externalDevice doesn't exist in ovation-api
+        # get equipment setup and extract device from there?
+        device = epoch.getParent().getExperiment().externalDevice(device_name, 'Neuralynx')
         samples = csc_data.samples_by_date(start, end)
         if len(samples) > 0:
             logging.info("  Inserting response %s for Epoch %s", device.getName(), epoch.getStartTime().toString())
-            numeric_data = ovation.NumericData(samples)
+            numeric_data = ovation.NumericData(samples) # class provided by us/physion/ovation/values/NumericData how do I get it?
+            # TODO insertResponse doesn't exist in ovation-api
+            # insertNumericMeasurement(String name, Set<String> sourceNames, Set<String> devices, NumericData data)
             epoch.insertResponse(device,
                 csc_data.header,
                 numeric_data,
