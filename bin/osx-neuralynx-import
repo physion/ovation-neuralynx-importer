@@ -6,9 +6,6 @@
 import sys
 
 if __name__ == '__main__':
-    sys.path.append('/opt/ovation/ovation.jar')
-    sys.path.append('/opt/ovation/lib/ovation-ui.jar')
-
-    import ovneuralynx.__main__ as main
+    import ovation_neuralynx.__main__ as main
 
     sys.exit(main.main())
