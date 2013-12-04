@@ -10,8 +10,8 @@ except ImportError:
 
 
 from optparse import OptionParser, OptionGroup
-from ovneuralynx.importer import NeuralynxImporter
-from org.joda.time import DateTimeZone
+from ovation_neuralynx.importer import NeuralynxImporter
+from ovation import DateTimeZone
 
 def main(argv=None):
     if argv is None:
