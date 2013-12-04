@@ -3,12 +3,12 @@
 from __future__ import with_statement
 
 import logging
-import jarray
+import array
 import binary_reader
 
 from math import floor, ceil
 from datetime import timedelta
-from ovneuralynx.exceptions import ImportException
+from ovation_neuralynx.exceptions import ImportException
 
 
 def total_microseconds(td):
@@ -105,7 +105,7 @@ def _calculate_index(srate_hz, time_us, round_fn):
     return int(round_fn(time_us * 1e-6 * srate_hz))
 
 def _collect_samples(sampling_rate_hz, blocks):
-    samples = jarray.array([], 'f')
+    samples = array.array('f', [])
     n = 0
     for block in blocks:
         n += 1
