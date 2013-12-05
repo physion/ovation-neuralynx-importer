@@ -162,7 +162,7 @@ class NeuralynxImporter(object):
             logging.info("  Inserting response %s for Epoch %s", device_name, epoch.getStartTime().toString())
             numeric_data = ovation.NumericData(samples)
             epoch.insertNumericMeasurement(     # epoch.insertResponse(device,
-                String name,                    #     csc_data.header,
+                device_name,                    #     csc_data.header,
                 self.sources.keySet(),          #     numeric_data,
                 devices.keySet(),               #     u'µV',
                 numeric_data                    #     'time',
