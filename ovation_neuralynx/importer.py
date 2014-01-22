@@ -10,9 +10,7 @@ import ovation
 from jnius import autoclass
 LocalDateTime = autoclass("org.joda.time.LocalDateTime")
 
-from getpass import getpass
 from ovation import DateTimeZone
-from ovation.connection import connect
 from ovation import Maps
 from ovation.conversion import to_map, asclass
 
@@ -25,31 +23,25 @@ from ovation_neuralynx.binary_reader import ManagedBinaryReader, BinaryReader, N
 class NeuralynxImporter(object):
 
     def __init__(self,
-                 connection_file=None,
-                 username=None,
-                 password=None,
-                 protocol_id='ovneuralynx',
+                 protocol=None,
                  protocol_parameters=None,
-                 timezone=DateTimeZone.getDefault()):
+                 timezone=None):
 
-        if connection_file is None:
-            raise ImportException("Connection file required")
+        self.protocol_id = None
+        if not protocol is None:
+            self.protocol_id = protocol.getUuid().toString()
 
-        if username is None:
-            raise ImportException("Username is required")
+        if timezone is None:
+            timezone = DateTimeZone.getDefault()
 
-        self.connection_file = connection_file
-        self.username = username
-        self.password = password
-        self.protocol_id = protocol_id
+        self.protocol = protocol
         self.protocol_parameters = protocol_parameters
         self.timezone = timezone
 
 
-
     def import_ncs(self,
-               container_uri,
-               source_uri,
+               container,
+               sources,
                label,
                ncs_files=list(),
                event_file=None,
@@ -57,21 +49,7 @@ class NeuralynxImporter(object):
                end_id=None,
                include_interepoch=True):
 
-
-        if self.password is None:
-            password = getpass()
-        else:
-            password = self.password
-
-        logging.info("Authenticating")
-        self.dsc = ovation.connect(self.username, self.pasword)
-
-        ctx = self.dsc.getContext()
-        container = asclass('us.physion.ovation.domain.mixin.EpochGroupContainer', ctx.getObjectWithURI(container_uri))
-        source = asclass('Source', ctx.getObjectWithURI(source_uri)) # ovation://<uuid>
-        self.protocol = asclass('Protocol', None) # TODO how do we get object from protocol_id,; is protocol_id == uuid ?
-        self.sources = Maps.newHashMap()
-        self.sources.put(source.getLabel(), source)
+        self.sources = sources
 
         # TODO figure out what should go into device params
         # device parameters
@@ -89,9 +67,11 @@ class NeuralynxImporter(object):
                 csc_data = CscData(header, ncs_blocks(reader, header))
 
                 open_time = header["Time Opened"]
+                logging.info("Open Time: %s", open_time)
+                logging.info("Timezone: %s", self.timezone)
 
                 # We assume all times are datetime in given local zone
-                start = LocalDateTime(open_time).toDateTime(self.timezone)
+                start = LocalDateTime.parse(open_time).toDateTime(self.timezone)
 
                 if group is None:
                     logging.info("Inserting top-level EpochGroup")

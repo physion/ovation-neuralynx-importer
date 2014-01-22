@@ -14,11 +14,13 @@ def main(argv=sys.argv, dsc=None):
                   protocol=None,
                   files=None,
                   sources=None,
+                  epoch_group_label=None,
                   event_file=None,
                   protocol_parameters=None,
                   epoch_start_event_id=None,
                   epoch_end_event_id=None,
                   include_interepoch=False,
+                  timezone=None,
                   **args):
 
         container = data_context.getObjectWithURI(container)
@@ -34,30 +36,27 @@ def main(argv=sys.argv, dsc=None):
             protocol_parameters = dict(protocol_parameters)
 
         if not sources is None:
-            sources = [data_context.getObjectWithURI(source) for source in sources]
+            sources = [asclass('Source', data_context.getObjectWithURI(source)) for source in sources]
 
-        # do something with the files...
-        # importer = NeuralynxImporter(
-        #     connection_file=options.connection_file,
-        #     username=user,
-        #     password=options.password,
-        #     protocol_id=options.protocol_id,
-        #     protocol_parameters=protocol_parameters,
-        #     timezone=tz)
-        # 
-        # 
-        # importer.import_ncs(container_uri,
-        #     source_uri,
-        #     options.epoch_group_label,
-        #     ncs_files=ncs_files,
-        #     event_file=options.event_file,
-        #     start_id=options.epoch_start_event_id,
-        #     end_id=options.epoch_end_event_id,
-        #     include_interepoch=options.include_interepoch)
+        importer = NeuralynxImporter(
+            protocol=protocol,
+            protocol_parameters=protocol_parameters,
+            timezone=timezone)
+
+        importer.import_ncs(container,
+            sources,
+            epoch_group_label,
+            ncs_files=files,
+            event_file=event_file,
+            start_id=epoch_start_event_id,
+            end_id=epoch_end_event_id,
+            include_interepoch=include_interepoch)
 
         return 0
 
     def parse_wrapper(parser):
+        parser.add_argument("-l", "--label", dest="epoch_group_label",
+            help="Epoch group label", default="Neuralynx")
         parser.add_argument("-e", "--event-file", dest="event_file",
             help="Neuralynx event (.nev) file", metavar="FILE")
         parser.add_argument("--protocol-parameter", dest="protocol_parameters",
