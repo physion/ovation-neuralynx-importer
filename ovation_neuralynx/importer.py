@@ -8,11 +8,15 @@ import os.path
 import ovation
 
 from jnius import autoclass
-LocalDateTime = autoclass("org.joda.time.LocalDateTime")
+DateTimeFormat = autoclass("org.joda.time.format.DateTimeFormat")
+
+import quantities as pq
 
 from ovation import DateTimeZone
 from ovation import Maps
-from ovation.conversion import to_map, asclass
+from ovation.core import NumericData
+from ovation.data import insert_numeric_measurement
+from ovation.conversion import to_map, asclass, to_java_set
 
 from ovation_neuralynx.exceptions import ImportException
 from ovation_neuralynx.header import parse_header
@@ -37,6 +41,7 @@ class NeuralynxImporter(object):
         self.protocol = protocol
         self.protocol_parameters = protocol_parameters
         self.timezone = timezone
+        self.timeFormatter = DateTimeFormat.forPattern('Y-M-d HH:mm:ss.SSSSSS')
 
 
     def import_ncs(self,
@@ -50,6 +55,8 @@ class NeuralynxImporter(object):
                include_interepoch=True):
 
         self.sources = sources
+        self.source_map = Maps.newHashMap()
+        [self.source_map.put(source.getLabel(), source) for source in sources]
 
         # TODO figure out what should go into device params
         # device parameters
@@ -71,14 +78,16 @@ class NeuralynxImporter(object):
                 logging.info("Timezone: %s", self.timezone)
 
                 # We assume all times are datetime in given local zone
-                start = LocalDateTime.parse(open_time).toDateTime(self.timezone)
+                start = self.timeFormatter.parseDateTime(str(open_time)).toDateTime(self.timezone)
+                logging.info("Start done")
 
                 if group is None:
                     logging.info("Inserting top-level EpochGroup")
-                    group = container.insertEpochGroup(label,
+                    group = asclass("us.physion.ovation.domain.mixin.EpochGroupContainer", container).insertEpochGroup(label,
                         start,
+                        self.protocol,
                         to_map(self.protocol_parameters),
-                        to_map(device_parameters)
+                        to_map(self.device_parameters)
                     )
 
                 if event_file is None or start_id is None:
@@ -116,15 +125,14 @@ class NeuralynxImporter(object):
                         current_epoch = epoch
 
 
-
     def insert_epoch(self, group, start, end, interepoch):
         logging.info("Importing Epoch %s : %s", start, end)
 
         epoch = group.insertEpoch(
-                self.sources,
+                self.source_map,
                 None,
-                LocalDateTime(start).toDateTime(self.timezone),
-                LocalDateTime(end).toDateTime(self.timezone),
+                self.timeFormatter.parseDateTime(str(start)).toDateTime(self.timezone),
+                self.timeFormatter.parseDateTime(str(end)).toDateTime(self.timezone) if end else end,
                 self.protocol, # self.protocol_id if not interepoch else "%s.inter-epoch" % self.protocol_id,
                 to_map(self.protocol_parameters),
                 to_map(self.device_parameters)
@@ -133,22 +141,33 @@ class NeuralynxImporter(object):
 
     def append_response(self, epoch, device_name, csc_data, start, end):
 
-        devices = Maps.newHashMap()
-        devices.put(device_name, 'Neuralynx')
-        epoch.getParent().getExperiment().setEquipmentSetupFromMap(devices)
+        # devices = Maps.newHashMap()
+        # devices.put(device_name, 'Neuralynx')
+        # epoch.getExperiment().setEquipmentSetupFromMap(devices)
 
-        samples = csc_data.samples_by_date(start, end)
+        sources = []
+        iterator = epoch.getInputSources().values().iterator()
+        while iterator.hasNext():
+            sources.append(iterator.next().getLabel())
+        devices = { device_name : 'Neuralynx' }
+
+        samples = pq.Quantity(csc_data.samples_by_date(start, end))
+        samples.labels = [u'uV'] # time ? 'µV'
+        samples.sampling_rates = [csc_data.sampling_rate_hz * pq.Hz]
+
+        name = 'Some name here...'
+        data_frame = { name : samples }
+
         if len(samples) > 0:
-            logging.info("  Inserting response %s for Epoch %s", device_name, epoch.getStartTime().toString())
-            numeric_data = ovation.NumericData(samples)
-            epoch.insertNumericMeasurement(     # epoch.insertResponse(device,
-                device_name,                    #     csc_data.header,
-                self.sources.keySet(),          #     numeric_data,
-                devices.keySet(),               #     u'µV',
-                numeric_data                    #     'time',
-            )                                   #     csc_data.sampling_rate_hz,
-                                                #     'Hz',
-                                                #     ovation.IResponseData.NUMERIC_DATA_UTI)
+           logging.info("  Inserting response %s for Epoch %s", device_name, epoch.getStart().toString())
+           insert_numeric_measurement(epoch,            # epoch.insertResponse(device,
+                                      sources,          #     csc_data.header,
+                                      devices,          #     numeric_data,
+                                      name,             #     u'µV',
+                                      data_frame)       #     'time',
+                                                        #     csc_data.sampling_rate_hz,
+                                                        #     'Hz',
+                                                        #     ovation.IResponseData.NUMERIC_DATA_UTI)
 
         return epoch
 
