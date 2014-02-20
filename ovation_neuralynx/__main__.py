@@ -1,7 +1,9 @@
 # Copyright 2011, Physion Consulting LLC
 # -*- coding: utf-8 -*-
 
+import time
 import sys
+import logging
 from ovation.conversion import asclass
 from ovation.importer import import_main
 from ovation_neuralynx.importer import NeuralynxImporter
@@ -43,14 +45,33 @@ def main(argv=sys.argv, dsc=None):
             protocol_parameters=protocol_parameters,
             timezone=timezone)
 
-        importer.import_ncs(container,
-            sources,
-            epoch_group_label,
-            ncs_files=files,
-            event_file=event_file,
-            start_id=epoch_start_event_id,
-            end_id=epoch_end_event_id,
-            include_interepoch=include_interepoch)
+        data_context.beginTransaction()
+        logging.info("Starting import...")
+        try:
+            importer.import_ncs(container,
+                sources,
+                epoch_group_label,
+                ncs_files=files,
+                event_file=event_file,
+                start_id=epoch_start_event_id,
+                end_id=epoch_end_event_id,
+                include_interepoch=include_interepoch)
+        except:
+            logging.error("Import failed, aborting.")
+            data_context.abortTransaction()
+        else:
+            logging.info("Import complete.")
+            data_context.commitTransaction()
+
+            time.sleep(2) # wait for file service to recognize pending uploads
+
+            logging.info("Waiting for file uploads...")
+            file_service = data_context.getFileService()
+            while file_service.hasPendingUploads():
+                logging.info('  .')
+                time.sleep(2)
+
+            logging.info("Done.")
 
         return 0
 

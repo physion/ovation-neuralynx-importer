@@ -74,8 +74,6 @@ class NeuralynxImporter(object):
                 csc_data = CscData(header, ncs_blocks(reader, header))
 
                 open_time = header["Time Opened"]
-                logging.info("Open Time: %s", open_time)
-                logging.info("Timezone: %s", self.timezone)
 
                 # We assume all times are datetime in given local zone
                 start = self.timeFormatter.parseDateTime(str(open_time)).toDateTime(self.timezone)
@@ -140,38 +138,26 @@ class NeuralynxImporter(object):
         return epoch
 
     def append_response(self, epoch, device_name, csc_data, start, end):
-
-        # devices = Maps.newHashMap()
-        # devices.put(device_name, 'Neuralynx')
-        # epoch.getExperiment().setEquipmentSetupFromMap(devices)
-
         sources = []
         iterator = epoch.getInputSources().values().iterator()
         while iterator.hasNext():
             sources.append(iterator.next().getLabel())
         devices = { device_name : 'Neuralynx' }
 
-        samples = pq.Quantity(csc_data.samples_by_date(start, end))
-        samples.labels = [u'uV'] # time ? 'µV'
+        samples = pq.Quantity(csc_data.samples_by_date(start, end), units='uV')
+        samples.labels = [u'Membrane voltage']
         samples.sampling_rates = [csc_data.sampling_rate_hz * pq.Hz]
 
-        name = 'Some name here...'
+        devices = { device_name : 'Neuralynx' }
+        name = device_name
         data_frame = { name : samples }
 
         if len(samples) > 0:
            logging.info("  Inserting response %s for Epoch %s", device_name, epoch.getStart().toString())
-           insert_numeric_measurement(epoch,            # epoch.insertResponse(device,
-                                      sources,          #     csc_data.header,
-                                      devices,          #     numeric_data,
-                                      name,             #     u'µV',
-                                      data_frame)       #     'time',
-                                                        #     csc_data.sampling_rate_hz,
-                                                        #     'Hz',
-                                                        #     ovation.IResponseData.NUMERIC_DATA_UTI)
+           insert_numeric_measurement(epoch,
+                                      sources,
+                                      devices,
+                                      name,
+                                      data_frame)
 
         return epoch
-
-
-
-
-
