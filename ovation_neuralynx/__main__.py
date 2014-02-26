@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import time
-import sys
+import sys, traceback
 import logging
 from ovation.conversion import asclass
 from ovation.importer import import_main
@@ -56,8 +56,10 @@ def main(argv=sys.argv, dsc=None):
                 start_id=epoch_start_event_id,
                 end_id=epoch_end_event_id,
                 include_interepoch=include_interepoch)
-        except:
+        except Exception as e:
             logging.error("Import failed, aborting.")
+            logging.error("Error: %s" % e)
+            traceback.print_exc(file=sys.stdout)
             data_context.abortTransaction()
         else:
             logging.info("Import complete.")

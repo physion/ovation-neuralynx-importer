@@ -80,7 +80,7 @@ class NeuralynxImporter(object):
                 logging.info("Start done")
 
                 if group is None:
-                    logging.info("Inserting top-level EpochGroup")
+                    logging.info("Inserting top-level EpochGroup: %s", label)
                     group = asclass("us.physion.ovation.domain.mixin.EpochGroupContainer", container).insertEpochGroup(label,
                         start,
                         self.protocol,
@@ -89,12 +89,14 @@ class NeuralynxImporter(object):
                     )
 
                 if event_file is None or start_id is None:
+                    logging.info("No event file present")
                     if not None in epochs:
                         epochs[None] = self.insert_epoch(group, open_time, None, False)
 
                     self.append_response(epochs[None], device_name, csc_data, open_time, None)
 
                 else:
+                    logging.info("Event file present")
                     if epoch_boundaries is None:
                         logging.info("Determining Epoch boundaries")
                         with open(event_file, 'rb') as ef:
@@ -108,15 +110,13 @@ class NeuralynxImporter(object):
 
                     current_epoch = None
                     for epoch_boundary in epoch_boundaries:
-                        if not epoch_boundaries in epochs:
+                        if not epoch_boundary in epochs:
                             epochs[epoch_boundary] = self.insert_epoch(group,
                                 epoch_boundary.start,
                                 epoch_boundary.end,
                                 epoch_boundary.interepoch)
 
                         epoch = epochs[epoch_boundary]
-                        if current_epoch is not None and epoch.getPreviousEpoch() is None:
-                            epoch.setPreviousEpoch(current_epoch)
 
                         self.append_response(epoch, device_name, csc_data, epoch_boundary.start, epoch_boundary.end)
 
@@ -138,6 +138,7 @@ class NeuralynxImporter(object):
         return epoch
 
     def append_response(self, epoch, device_name, csc_data, start, end):
+        logging.info("Appending response...")
         sources = []
         iterator = epoch.getInputSources().values().iterator()
         while iterator.hasNext():

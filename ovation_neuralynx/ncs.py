@@ -58,6 +58,9 @@ class CscData(object):
         if end_date is not None and end_date < start_date:
             raise ImportException("End date before start date")
 
+        if start_date > self.end:
+            raise ImportException("Start date after end date")
+
         if end_date is not None and end_date > self.end:
             logging.warning("End date after data end")
             end_date = self.end
