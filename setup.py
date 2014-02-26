@@ -15,7 +15,7 @@ setup(name='Ovation Neuralynx Import',
     author_email='info@physion.us',
     url='https://github.com/physion/ovation-neuralynx-importer',
     packages=['ovation_neuralynx'],
-    install_requires=['ovation>=2.0-beta2'],
+    install_requires=['ovation>=2.1.8'],
     tests_require=['nose==1.3.0'],
     classifiers=[
         'Development Status :: 5 - Alpha',
