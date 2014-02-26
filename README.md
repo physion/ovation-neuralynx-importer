@@ -4,7 +4,7 @@ This project provides a command-line importer for [Neuralynx](http://neuralynx.c
 
 
 ## Requirements
-The Neuralynx importer requires Ovation 2.0 or greater, a 64-bit Java Virtual Machine ([download](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) and Python 2.7+ ([download](http://www.jython.org/downloads.html)) or greater.
+The Neuralynx importer requires Ovation 2.0 or greater, a 32 or 64-bit Java Virtual Machine ([download](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) and Python 2.7+ ([download](http://www.jython.org/downloads.html)) or greater.
 
 
 ## Installation
@@ -16,7 +16,7 @@ This will install the `ovation-neuralynx` module and all of its dependencies.
 
 ## Usage
 
-After installation, you can run the importer via `osx-neuralynx-import` on OS X, `linux-neuralynx-import` on Linux or `windows-neuralynx-import` on Windows. These scripts are installed in the [TODO FIXME] `bin` directory. If this directory is not on the executable search path, you will need to provide the full path to the scripts to run them at the terminal command line.
+After installation, you can run the importer via `osx-neuralynx-import` on OS X, `linux-neuralynx-import` on Linux or `windows-neuralynx-import` on Windows. These scripts are installed in the Python interpreter `bin` directory. If this directory is not on the executable search path, you will need to provide the full path to the scripts to run them at the terminal command line.
 
 In all cases, the usage is the same:
 	
@@ -58,4 +58,4 @@ In all cases, the usage is the same:
 
 ## License
 
-The Ovation Neo IO importer is Copyright (c) 2013 Physion Consulting LLC and is licensed under the [GPL v3.0 license](http://www.gnu.org/licenses/gpl.html "GPLv3") license.
+The Ovation Neuralynx importer is Copyright (c) 2013 Physion LLC and is licensed under the [GPL v3.0 license](http://www.gnu.org/licenses/gpl.html "GPLv3") license.
